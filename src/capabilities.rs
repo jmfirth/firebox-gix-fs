@@ -39,6 +39,23 @@ impl Default for Capabilities {
     }
 }
 
+// Firebox PoC (codex-portability — gitoxide wasm gap): wasi is neither `unix`, `windows`, nor
+// `macos` in gix-fs's cfg view, so `Default for Capabilities` was unimplemented there and
+// `Capabilities::probe`'s `Capabilities::default()` failed to compile. wasi filesystems behave
+// like a generic POSIX fs (case-sensitive, exec bit, symlinks). Real home: UPSTREAM gitoxide —
+// a `target_family="wasm"`/wasi arm for the platform Default. Retires when gix-fs ships one.
+#[cfg(all(not(unix), not(windows), target_family = "wasm"))]
+impl Default for Capabilities {
+    fn default() -> Self {
+        Capabilities {
+            precompose_unicode: false,
+            ignore_case: false,
+            executable_bit: true,
+            symlink: true,
+        }
+    }
+}
+
 enum Dir {
     IsGit,
     IsArbitrary,
